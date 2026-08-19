@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendário de postagens — @factsdodia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0B0C;
+    --surface:#141416;
+    --surface-2:#1B1B1E;
+    --line:#2A2A2F;
+    --ink:#EDEDEA;
+    --muted:#8A8A92;
+    --gold:#F2B705;
+    --gold-dim:#7A5D06;
+    --display:'Archivo Black',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--body);
+    -webkit-font-smoothing:antialiased;padding:28px 20px 60px;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+
+  /* ---------- topo ---------- */
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;justify-content:space-between;margin-bottom:24px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{width:26px;height:26px;flex:none}
+  .brand h1{font-family:var(--display);font-size:19px;letter-spacing:.02em;margin:0;line-height:1}
+  .brand span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:6px;text-transform:uppercase}
+  .yearnav{display:flex;align-items:center;gap:6px}
+  .yearnav b{font-family:var(--mono);font-size:15px;min-width:56px;text-align:center;letter-spacing:.06em}
+
+  button{font-family:var(--body);cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:7px 11px;font-size:12.5px;transition:border-color .12s,background .12s}
+  button:hover{border-color:var(--gold-dim);background:var(--surface-2)}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* ---------- resumo do ano (assinatura) ---------- */
+  .year-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-bottom:26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0}
+  .ys{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .ys .bar{width:100%;height:34px;background:var(--surface);border:1px solid var(--line);border-radius:3px;position:relative;overflow:hidden}
+  .ys .fill{position:absolute;left:0;right:0;bottom:0;background:var(--gold);transition:height .25s}
+  .ys .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted)}
+  .ys.on .lbl{color:var(--ink)}
+  .ys.on .bar{border-color:var(--gold)}
+  .ys:hover .bar{border-color:var(--gold-dim)}
+
+  /* ---------- cabeçalho do mês ---------- */
+  .month-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 20px;margin-bottom:14px}
+  .month-head h2{font-family:var(--display);font-size:40px;line-height:.9;margin:0;letter-spacing:-.01em;text-transform:uppercase}
+  .stat{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em}
+  .stat b{color:var(--gold);font-weight:700}
+  .followers{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .followers label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .followers input{width:100px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:var(--mono);font-size:13px;padding:7px 9px}
+  .followers input:focus{outline:none;border-color:var(--gold)}
+
+  /* ---------- grade ---------- */
+  .grid{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+  .row{display:grid;grid-template-columns:64px repeat(5,1fr);border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row.head{background:var(--surface-2);position:sticky;top:0;z-index:2}
+  .row.head .cell{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);padding:10px 0;text-align:center}
+  .row.head button.cell{border:0;border-radius:0;background:none}
+  .row.head button.cell:hover{color:var(--gold);background:rgba(242,183,5,.06)}
+  .daylbl{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line);letter-spacing:.03em}
+  .row.today .daylbl{color:var(--gold)}
+  .row.weekend{background:rgba(255,255,255,.018)}
+  .slot{border:0;border-right:1px solid var(--line);border-radius:0;background:none;height:34px;position:relative;padding:0}
+  .slot:last-child{border-right:0}
+  .slot:hover{background:rgba(242,183,5,.07)}
+  .slot::after{content:"";position:absolute;inset:9px;border:1px solid var(--line);border-radius:3px;transition:background .12s,border-color .12s}
+  .slot[aria-pressed="true"]::after{background:var(--gold);border-color:var(--gold)}
+  .row.today .slot::after{border-color:var(--gold-dim)}
+
+  /* ---------- rodapé ---------- */
+  .tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;align-items:center}
+  .tools .spacer{flex:1}
+  .hint{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:22px;line-height:1.7}
+  .danger:hover{border-color:#7a2626;color:#ff8a8a}
+  @media (max-width:560px){
+    body{padding:20px 12px 50px}
+    .month-head h2{font-size:30px}
+    .followers{margin-left:0}
+    .row{grid-template-columns:48px repeat(5,1fr)}
+    .year-strip{gap:3px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2" stroke-linecap="round">
+        <circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21"/>
+      </svg>
+      <div>
+        <h1>Calendário de postagens</h1>
+        <span>@factsdodia · 9h 12h 15h 18h 21h</span>
+      </div>
+    </div>
+    <div class="yearnav">
+      <button id="prevYear" aria-label="Ano anterior">←</button>
+      <b id="yearLabel">2026</b>
+      <button id="nextYear" aria-label="Próximo ano">→</button>
+    </div>
+  </header>
+
+  <div class="year-strip" id="yearStrip"></div>
+
+  <div class="month-head">
+    <h2 id="monthName">Maio</h2>
+    <div class="stat"><b id="doneCount">0</b> <span id="totalCount">/ 150 publicados</span></div>
+    <div class="followers">
+      <label for="followers">Seguidores</label>
+      <input id="followers" inputmode="numeric" placeholder="—">
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="tools">
+    <button id="fillMonth">Marcar mês inteiro</button>
+    <button id="clearMonth">Limpar mês</button>
+    <span class="spacer"></span>
+    <button id="export">Baixar backup</button>
+    <button id="import">Restaurar backup</button>
+    <button id="reset" class="danger">Apagar tudo</button>
+  </div>
+
+  <p class="hint">
+    Clique num quadrado para marcar o post como publicado. Clique no horário do cabeçalho para marcar a coluna inteira do mês.<br>
+    Os dados ficam salvos neste navegador. Baixe o backup de vez em quando se quiser levar para outro aparelho.
+  </p>
+</div>
+
+<input type="file" id="fileInput" accept="application/json" hidden>
+
+<script>
+const KEY = 'factsdodia-calendario-v1';
+const HOURS = ['9h','12h','15h','18h','21h'];
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const SHORT = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
+const today = new Date();
+let year = today.getFullYear();
+let month = today.getMonth();
+let data = load();
+
+function load(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+  catch { return {}; }
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+}
+function monthKey(y,m){ return y + '-' + String(m+1).padStart(2,'0'); }
+function monthData(y,m){
+  const k = monthKey(y,m);
+  if(!data[k]) data[k] = { seguidores:'', slots:{} };
+  return data[k];
+}
+function daysIn(y,m){ return new Date(y, m+1, 0).getDate(); }
+
+function render(){
+  document.getElementById('yearLabel').textContent = year;
+  document.getElementById('monthName').textContent = MONTHS[month];
+
+  const md = monthData(year, month);
+  const total = daysIn(year, month) * HOURS.length;
+  document.getElementById('totalCount').textContent = '/ ' + total + ' publicados';
+  document.getElementById('followers').value = md.seguidores || '';
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const head = document.createElement('div');
+  head.className = 'row head';
+  head.innerHTML = '<div class="cell"></div>';
+  HOURS.forEach((h,i) => {
+    const b = document.createElement('button');
+    b.className = 'cell';
+    b.textContent = h;
+    b.title = 'Marcar/limpar todos os posts de ' + h;
+    b.addEventListener('click', () => toggleColumn(i));
+    head.appendChild(b);
+  });
+  grid.appendChild(head);
+
+  for(let d = 1; d <= daysIn(year, month); d++){
+    const row = document.createElement('div');
+    row.className = 'row';
+    const wd = new Date(year, month, d).getDay();
+    if(wd === 0 || wd === 6) row.classList.add('weekend');
+    if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) row.classList.add('today');
+
+    const lbl = document.createElement('div');
+    lbl.className = 'daylbl';
+    lbl.textContent = String(d).padStart(2,'0');
+    row.appendChild(lbl);
+
+    HOURS.forEach((h,i) => {
+      const id = d + ':' + i;
+      const b = document.createElement('button');
+      b.className = 'slot';
+      b.setAttribute('aria-pressed', md.slots[id] ? 'true' : 'false');
+      b.setAttribute('aria-label', 'Dia ' + d + ', ' + h);
+      b.addEventListener('click', () => {
+        if(md.slots[id]) delete md.slots[id]; else md.slots[id] = 1;
+        b.setAttribute('aria-pressed', md.slots[id] ? 'true' : 'false');
+        save(); updateCounts();
+      });
+      row.appendChild(b);
+    });
+    grid.appendChild(row);
+  }
+
+  renderStrip();
+  updateCounts();
+}
+
+function toggleColumn(i){
+  const md = monthData(year, month);
+  const days = daysIn(year, month);
+  let allOn = true;
+  for(let d=1; d<=days; d++) if(!md.slots[d+':'+i]) { allOn = false; break; }
+  for(let d=1; d<=days; d++){
+    const id = d+':'+i;
+    if(allOn) delete md.slots[id]; else md.slots[id] = 1;
+  }
+  save(); render();
+}
+
+function countMonth(y,m){
+  const k = monthKey(y,m);
+  return data[k] ? Object.keys(data[k].slots || {}).length : 0;
+}
+
+function updateCounts(){
+  document.getElementById('doneCount').textContent = countMonth(year, month);
+  renderStrip();
+}
+
+function renderStrip(){
+  const strip = document.getElementById('yearStrip');
+  strip.innerHTML = '';
+  for(let m=0; m<12; m++){
+    const total = daysIn(year, m) * HOURS.length;
+    const pct = Math.round(countMonth(year, m) / total * 100);
+    const b = document.createElement('button');
+    b.className = 'ys' + (m === month ? ' on' : '');
+    b.title = MONTHS[m] + ' — ' + pct + '% publicado';
+    b.innerHTML = '<div class="bar"><div class="fill" style="height:' + pct + '%"></div></div><div class="lbl">' + SHORT[m] + '</div>';
+    b.addEventListener('click', () => { month = m; render(); });
+    strip.appendChild(b);
+  }
+}
+
+/* ---------- controles ---------- */
+document.getElementById('prevYear').addEventListener('click', () => { year--; render(); });
+document.getElementById('nextYear').addEventListener('click', () => { year++; render(); });
+
+document.getElementById('followers').addEventListener('input', e => {
+  monthData(year, month).seguidores = e.target.value;
+  save();
+});
+
+document.getElementById('fillMonth').addEventListener('click', () => {
+  const md = monthData(year, month);
+  for(let d=1; d<=daysIn(year, month); d++) HOURS.forEach((h,i) => md.slots[d+':'+i] = 1);
+  save(); render();
+});
+
+document.getElementById('clearMonth').addEventListener('click', () => {
+  if(!confirm('Limpar todas as marcações de ' + MONTHS[month] + '?')) return;
+  monthData(year, month).slots = {};
+  save(); render();
+});
+
+document.getElementById('export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'factsdodia-calendario-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('import').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const incoming = JSON.parse(r.result);
+      if(typeof incoming !== 'object' || Array.isArray(incoming)) throw new Error();
+      data = incoming; save(); render();
+    } catch {
+      alert('Esse arquivo não é um backup válido do calendário.');
+    }
+  };
+  r.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  if(!confirm('Apagar TODAS as marcações de todos os meses? Isso não tem volta.')) return;
+  data = {}; save(); render();
+});
+
+render();
+</script>
+</body>
+</html>
